@@ -25,7 +25,12 @@ from graphframes import *
 
 # COMMAND ----------
 
-auth_manager = SpotifyClientCredentials()
+client_id = "048069deb13641da84c999f457c3963a"
+client_secret = "3b8ab7aa5f144e69bdc49663297017db"
+
+# COMMAND ----------
+
+auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
 sp = spotipy.Spotify(auth_manager=auth_manager)
 
 # COMMAND ----------
@@ -145,7 +150,7 @@ tracks_final = spark.createDataFrame([],tracks_final_df_schema)
 
 for user in user_ids:
   user_playlists = sp.user_playlists(user)
-  user_playlist_ids = [playlist['id'] for playlist in user_playlists["items"]][:20]
+  user_playlist_ids = [playlist['id'] for playlist in user_playlists["items"]][:50]
   
   for playlist_id in user_playlist_ids:
     playlist_tracks = sp.playlist_tracks(playlist_id)
@@ -181,8 +186,6 @@ playlist_tracks = sp.playlist_tracks("0C4IFYyjcSJ2nsgqsHWhxC")
 playlist_track_items = [item['track'] for item in playlist_tracks['items']]
 
 playlist_tracks_df = spark.createDataFrame(playlist_track_items,playlist_tracks_schema).withColumn("playlistId", lit(playlist_id))
-
-display(playlist_tracks_df.select("name","artists","album","playlistId"))
 
 # COMMAND ----------
 
@@ -257,11 +260,3 @@ playlist_owners_df_final = (playlist_owners_df
 playlist_owners_df_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graph_users")
 albums_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graph_albums")
 tracks_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graph_tracks")
-
-# COMMAND ----------
-
-display(tracks_final)
-
-# COMMAND ----------
-
-

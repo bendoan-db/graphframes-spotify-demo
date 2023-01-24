@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %pip install spotipy
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC # Graph Example - Startups East Spotify Graph
 
@@ -196,6 +200,11 @@ display(spotifyVerticesDF)
 # COMMAND ----------
 
 display(spotifyEdgesDF)
+
+# COMMAND ----------
+
+spotifyVerticesDF.write.mode("overwrite").format("delta").saveAsTable("doan_demo_database.graphframe_vertices")
+spotifyEdgesDF.write.mode("overwrite").format("delta").saveAsTable("doan_demo_database.graphframe_edges")
 
 # COMMAND ----------
 
