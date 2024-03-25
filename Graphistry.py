@@ -31,10 +31,22 @@ edges = spark.read.table("doan_demo_database.graphframe_edges")
 # COMMAND ----------
 
 import pyspark.sql.functions as F
-color_data = [["user", 15408149], ["playlist", 2463422], ["track", 376309], ["artist", 14680064], ["album", 22222]]
+color_data = color_data = [["user", 15408149], ["playlist", 2463422], ["track", 376309], ["artist", 14680064], ["album", 22222]]
 color_columns = ["vtype", "color_code"]
 
 color_mappings = spark.createDataFrame(color_data, color_columns)
+
+# COMMAND ----------
+
+import pandas as pd
+color_mappings_pd = pd.DataFrame({
+    'vtype': ['user', 'playlist', 'track', 'artist', 'album'],
+    'color_code': pd.Series(
+        [0xFF0000, 0xafc716, 0x253db8, 0x099c18, 0xfa0aee],
+        dtype='int64')
+})
+
+color_mappings = spark.createDataFrame(color_mappings_pd)
 
 # COMMAND ----------
 
@@ -43,18 +55,17 @@ display(gv)
 
 # COMMAND ----------
 
-p = (graphistry
+g = (graphistry
     .bind(point_title='vertex_properties')
     .nodes(gv, 'id')
     .bind(edge_title='relationship')
     .edges(edges, 'src', 'dst')
     .settings(url_params={'strongGravity': 'true'})
-    .plot()
-)
+    )
 
 # COMMAND ----------
 
-p
+g.encode_point_color('color_code').plot()
 
 # COMMAND ----------
 
