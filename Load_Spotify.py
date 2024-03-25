@@ -1,10 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Graph Example - Startups East Spotify Graph
-
-# COMMAND ----------
-
-# MAGIC %pip install spotipy
+# MAGIC # Graph Example - Spotify Graph
 
 # COMMAND ----------
 
@@ -30,11 +26,11 @@ sp = spotipy.Spotify(auth_manager=auth_manager)
 
 # COMMAND ----------
 
-user_ids = ["ben.doan4366","abafzal","1248411767","121025019","chrissteingass","thecarlhall"]
+user_ids = ["ben.doan4366", "vyrvddd99x5ejdq4b7ikuzgst", "missbea101", "shravya1shetty"]
 
 # COMMAND ----------
 
-user_playlists = sp.user_playlists("ben.doan4366")
+user_playlists = sp.user_playlists("shravya1shetty")
 user_playlists
 
 # COMMAND ----------
@@ -144,36 +140,46 @@ albums_final = spark.createDataFrame([],albums_final_df_schema)
 tracks_final = spark.createDataFrame([],tracks_final_df_schema)
 
 for user in user_ids:
+  print("processing: " + str(user))  
   user_playlists = sp.user_playlists(user)
-  user_playlist_ids = [playlist['id'] for playlist in user_playlists["items"]][:20]
+  user_playlist_ids = [playlist['id'] for playlist in user_playlists["items"]][:8]
   
   for playlist_id in user_playlist_ids:
     playlist_tracks = sp.playlist_tracks(playlist_id)
     playlist_track_items = [item['track'] for item in playlist_tracks['items']]
     
-    playlist_tracks_df = spark.createDataFrame(playlist_track_items,playlist_tracks_schema).withColumn("playlistId", lit(playlist_id))
+    try:
+        playlist_tracks_df = spark.createDataFrame(playlist_track_items,playlist_tracks_schema).withColumn("playlistId", lit(playlist_id))
+        playlist_tracks_df.count()
     
-    albums = (playlist_tracks_df
-            .select("album.*", "playlistId")
-            .select(col("name").alias("albumName"), col("id").alias("albumId"), explode("artists"), "playlistId")
-            .select("albumName", "albumId", "col.*", "playlistId")
-            .withColumnRenamed("name", "artistName")
-            .withColumnRenamed("id", "artistId")
-         )
-
-    tracks = (playlist_tracks_df
-                .select(explode("artists"), "playlistId", col("name").alias("trackName"), "duration_ms", col("id").alias("trackId"), col("album.id").alias("albumId"))
-                .select("col.*","playlistId", "trackName", "duration_ms", "trackId", "albumId")
-                .withColumnRenamed("id", "artistId")
+        albums = (playlist_tracks_df
+                .select("album.*", "playlistId")
+                .select(col("name").alias("albumName"), col("id").alias("albumId"), explode("artists"), "playlistId")
+                .select("albumName", "albumId", "col.*", "playlistId")
                 .withColumnRenamed("name", "artistName")
+                .withColumnRenamed("id", "artistId")
              )
+
+        tracks = (playlist_tracks_df
+                    .select(explode("artists"), "playlistId", col("name").alias("trackName"), "duration_ms", col("id").alias("trackId"), col("album.id").alias("albumId"))
+                    .select("col.*","playlistId", "trackName", "duration_ms", "trackId", "albumId")
+                    .withColumnRenamed("id", "artistId")
+                    .withColumnRenamed("name", "artistName")
+                 )
+
+        albums_final = albums_final.unionAll(albums)
+        tracks_final = tracks_final.unionAll(tracks)
     
-    albums_final = albums_final.unionAll(albums)
-    tracks_final = tracks_final.unionAll(tracks)
+    except:
+        pass
 
 # COMMAND ----------
 
-display(playlist_tracks_df)
+display(albums_final)
+
+# COMMAND ----------
+
+display(tracks_final)
 
 # COMMAND ----------
 
@@ -183,10 +189,6 @@ playlist_track_items = [item['track'] for item in playlist_tracks['items']]
 playlist_tracks_df = spark.createDataFrame(playlist_track_items,playlist_tracks_schema).withColumn("playlistId", lit(playlist_id))
 
 display(playlist_tracks_df.select("name","artists","album","playlistId"))
-
-# COMMAND ----------
-
-playlist_tracks_df.select("name","artists","album","playlistId").schema
 
 # COMMAND ----------
 
@@ -255,13 +257,9 @@ playlist_owners_df_final = (playlist_owners_df
 # COMMAND ----------
 
 playlist_owners_df_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graph_users")
-albums_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graph_albums")
-tracks_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graph_tracks")
+albums_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_albums")
+tracks_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_tracks")
 
 # COMMAND ----------
 
-display(tracks_final)
-
-# COMMAND ----------
-
-
+# MAGIC %run ./Integrations/Load_Neo4J

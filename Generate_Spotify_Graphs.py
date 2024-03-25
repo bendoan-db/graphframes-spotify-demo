@@ -31,13 +31,13 @@ user_ids = ["ben.doan4366","abafzal","1248411767","121025019","chrissteingass","
 
 # COMMAND ----------
 
-# MAGIC %run ./init/setup $reset_all=$reset_all_data $userIds=$userIds
+albums = spark.read.table("doan_demo_database.spotify_albums")
+tracks = spark.read.table("doan_demo_database.spotify_tracks")
+user_playlists = spark.read.table("doan_demo_database.spotify_graph_users")
 
 # COMMAND ----------
 
-albums = spark.read.table("doan_demo_database.spotify_graph_albums")
-tracks = spark.read.table("doan_demo_database.spotify_graph_tracks")
-user_playlists = spark.read.table("doan_demo_database.spotify_graph_users")
+display(user_playlists)
 
 # COMMAND ----------
 
@@ -199,6 +199,11 @@ display(spotifyEdgesDF)
 
 # COMMAND ----------
 
+spotifyVerticesDF.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graphframes_vertices")
+spotifyEdgesDF.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graphframes_edges")
+
+# COMMAND ----------
+
 spotifyGraph = GraphFrame(spotifyVerticesDF, spotifyEdgesDF)
 
 spotifyVerticesDF.cache()
@@ -213,7 +218,7 @@ inDeg = spotifyGraph.inDegrees
 
 # MAGIC %md
 # MAGIC ## Roughly Measure Influence by Calculating Out Degrees
-# MAGIC 
+# MAGIC
 # MAGIC One way to measure influence is to measure the out-degrees of a given vertex. In other words, how many edges point out from a given vertex?
 # MAGIC <img src="https://pepvids.sgp1.cdn.digitaloceanspaces.com/articles/introduction_to_graphs_and_its_representation/introduction_to_graphs_and_its_represtation_10.png"
 # MAGIC      alt="Markdown Monster icon"
@@ -229,27 +234,17 @@ display(artist_out_degrees.orderBy("outDegree", desc=True).distinct())
 
 # MAGIC %md
 # MAGIC ## Strongly Connected Components
-# MAGIC 
+# MAGIC
 # MAGIC A strongly connected component is the portion of a directed graph in which there is a path from each vertex to another vertex. It is applicable only on a directed graph.
-# MAGIC 
+# MAGIC
 # MAGIC <img src="https://cdn.programiz.com/sites/tutorial2program/files/scc-strongly-connected-components.png"
 # MAGIC      alt="Markdown Monster icon"
 # MAGIC      width=500px />
-# MAGIC 
-# MAGIC 
+# MAGIC
+# MAGIC
 # MAGIC **Applications**
 # MAGIC * **Threat Modeling:** resources that are SCCs are often in the same threat vector. If one is compromised other SCCs are often the most at-risk
 # MAGIC * **Social Media Analysis:** People who are often strongly connected often have common likes and habits, which and be used to boost the performance of recommendation engines
-
-# COMMAND ----------
-
-sccs = spotifyGraph.stronglyConnectedComponents(maxIter=10)
-artist_components = sccs.filter(col("vertex_type") == "artist")
-
-# COMMAND ----------
-
-#thugger_components = artist_components.filter(col("component") == "1709396983820")
-display(thugger_components.select("vertex_properties","component"))
 
 # COMMAND ----------
 
