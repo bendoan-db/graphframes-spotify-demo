@@ -4,6 +4,10 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install spotipy
+
+# COMMAND ----------
+
 import os
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -20,6 +24,11 @@ from pyspark.sql.types import *
 from graphframes import *
 
 # COMMAND ----------
+
+import os
+
+os.environ["SPOTIPY_CLIENT_ID"] = "96160c067ee0420e836823ee66ed8e48"
+os.environ["SPOTIPY_CLIENT_SECRET"] = "aa60eafdf0af4b169d669abfcfa6954f"
 
 auth_manager = SpotifyClientCredentials()
 sp = spotipy.Spotify(auth_manager=auth_manager)
@@ -250,15 +259,9 @@ for user in user_ids:
 
 # COMMAND ----------
 
-playlist_owners_df_final = (playlist_owners_df
-  .withColumn("playlist_owner", regexp_replace("playlist_owner", "1248411767", "Rohith Chintalapally"))
-  .withColumn("playlist_owner", regexp_replace("playlist_owner", "121025019", "Artem Yevtushenko")))
-
-# COMMAND ----------
-
-playlist_owners_df_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graph_users")
-albums_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_albums")
-tracks_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_tracks")
+playlist_owners_df.write.format("delta").mode("overwrite").saveAsTable("doan_demo_catalog.doan_demo_database.spotify_graph_users")
+albums_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_catalog.doan_demo_database.spotify_albums")
+tracks_final.write.format("delta").mode("overwrite").saveAsTable("doan_demo_catalog.doan_demo_database.spotify_tracks")
 
 # COMMAND ----------
 

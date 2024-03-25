@@ -4,6 +4,10 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install spotipy
+
+# COMMAND ----------
+
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "reset_all_data")
 dbutils.widgets.text("userIds", "ben.doan4366,abafzal,1248411767,121025019,chrissteingass,thecarlhall")
 
@@ -31,9 +35,9 @@ user_ids = ["ben.doan4366","abafzal","1248411767","121025019","chrissteingass","
 
 # COMMAND ----------
 
-albums = spark.read.table("doan_demo_database.spotify_albums")
-tracks = spark.read.table("doan_demo_database.spotify_tracks")
-user_playlists = spark.read.table("doan_demo_database.spotify_graph_users")
+albums = spark.read.table("doan_demo_catalog.doan_demo_database.spotify_albums")
+tracks = spark.read.table("doan_demo_catalog.doan_demo_database.spotify_tracks")
+user_playlists = spark.read.table("doan_demo_catalog.doan_demo_database.spotify_graph_users")
 
 # COMMAND ----------
 
@@ -199,8 +203,8 @@ display(spotifyEdgesDF)
 
 # COMMAND ----------
 
-spotifyVerticesDF.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graphframes_vertices")
-spotifyEdgesDF.write.format("delta").mode("overwrite").saveAsTable("doan_demo_database.spotify_graphframes_edges")
+spotifyVerticesDF.write.format("delta").mode("overwrite").saveAsTable("doan_demo_catalog.doan_demo_database.spotify_graphframes_vertices")
+spotifyEdgesDF.write.format("delta").mode("overwrite").saveAsTable("doan_demo_catalog.doan_demo_database.spotify_graphframes_edges")
 
 # COMMAND ----------
 

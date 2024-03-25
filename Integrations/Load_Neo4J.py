@@ -1,15 +1,20 @@
 # Databricks notebook source
+# MAGIC %md
+# MAGIC install maven package: org.neo4j:neo4j-connector-apache-spark_2.12:5.3.0_for_spark_3
+
+# COMMAND ----------
+
 from pyspark.sql.functions import *
 
 # COMMAND ----------
 
-users = spark.read.table("doan_demo_database.spotify_graph_users")
-albums = spark.read.table("doan_demo_database.spotify_albums")
-tracks = spark.read.table("doan_demo_database.spotify_tracks")
+users = spark.read.table("doan_demo_catalog.doan_demo_database.spotify_graph_users")
+albums = spark.read.table("doan_demo_catalog.doan_demo_database.spotify_albums")
+tracks = spark.read.table("doan_demo_catalog.doan_demo_database.spotify_tracks")
 
 # COMMAND ----------
 
-edges = spark.read.table("doan_demo_database.spotify_graphframes_edges")
+edges = spark.read.table("doan_demo_catalog.doan_demo_database.spotify_graphframes_edges")
 
 # COMMAND ----------
 
@@ -21,22 +26,29 @@ albums_v = albums.select("albumId", "albumName", "uri").dropDuplicates(["albumId
 
 # COMMAND ----------
 
+password = "xxx"
+url = "neo4j+s://4d2c59c5.databases.neo4j.io"
+
+# COMMAND ----------
+
 (users_v.write
   .format("org.neo4j.spark.DataSource")
   .mode("overwrite")
   .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-  .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+  .option("authentication.basic.password", password)
+  .option("url", url)
   .option("labels", ":user")
   .option("node.keys", "playlist_owner")
   .save())
+
+# COMMAND ----------
 
 (playlists_v.write
   .format("org.neo4j.spark.DataSource")
   .mode("overwrite")
   .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-  .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+  .option("authentication.basic.password", password)
+  .option("url", url)
   .option("labels", ":playlist")
   .option("node.keys", "playlist_id")
   .save())
@@ -45,8 +57,8 @@ albums_v = albums.select("albumId", "albumName", "uri").dropDuplicates(["albumId
   .format("org.neo4j.spark.DataSource")
   .mode("overwrite")
   .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-  .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+  .option("authentication.basic.password", password)
+  .option("url", url)
   .option("labels", ":track")
   .option("node.keys", "trackId")
   .save())
@@ -55,8 +67,8 @@ albums_v = albums.select("albumId", "albumName", "uri").dropDuplicates(["albumId
   .format("org.neo4j.spark.DataSource")
   .mode("overwrite")
   .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-  .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+  .option("authentication.basic.password", password)
+  .option("url", url)
   .option("labels", ":artist")
   .option("node.keys", "artistId")
   .save())
@@ -66,8 +78,8 @@ albums_v = albums.select("albumId", "albumName", "uri").dropDuplicates(["albumId
   .format("org.neo4j.spark.DataSource")
   .mode("overwrite")
   .option("authentication.basic.username", "neo4j")
-  .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-  .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+  .option("authentication.basic.password", password)
+  .option("url", url)
   .option("labels", ":album")
   .option("node.keys", "albumId")
   .save())
@@ -90,8 +102,8 @@ featured_on.count()
     .write
     .format("org.neo4j.spark.DataSource")
     .option("authentication.basic.username", "neo4j")
-    .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-    .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+    .option("authentication.basic.password", password)
+    .option("url", url)
     .mode("overwrite")
     .option("relationship", "FOLLOWS")
     .option("relationship.save.strategy", "keys")
@@ -108,8 +120,8 @@ featured_on.count()
 (featured_on.coalesce(1).write
     .format("org.neo4j.spark.DataSource")
     .option("authentication.basic.username", "neo4j")
-    .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-    .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+    .option("authentication.basic.password", password)
+    .option("url", url)
     .mode("overwrite")
     .option("relationship", "FEATURED_ON")
     .option("relationship.save.strategy", "keys")
@@ -126,8 +138,8 @@ featured_on.count()
 (created.coalesce(1).write
     .format("org.neo4j.spark.DataSource")
     .option("authentication.basic.username", "neo4j")
-    .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-    .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+    .option("authentication.basic.password", password)
+    .option("url", url)
     .mode("overwrite")
     .option("relationship", "CREATED")
     .option("relationship.save.strategy", "keys")
@@ -144,8 +156,8 @@ featured_on.count()
 (added_to.coalesce(1).write
     .format("org.neo4j.spark.DataSource")
     .option("authentication.basic.username", "neo4j")
-    .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-    .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+    .option("authentication.basic.password", password)
+    .option("url", url)
     .mode("overwrite")
     .option("relationship", "ADDED_TO")
     .option("relationship.save.strategy", "keys")
@@ -162,8 +174,8 @@ featured_on.count()
 (listed_on.coalesce(1).write
     .format("org.neo4j.spark.DataSource")
     .option("authentication.basic.username", "neo4j")
-    .option("authentication.basic.password", "OocigvdesAs9mWZDXMOEkCKe3mgWz2YJR0OV4maJq8U")
-    .option("url", "neo4j+s://003dcec4.databases.neo4j.io")
+    .option("authentication.basic.password", password)
+    .option("url", url)
     .mode("overwrite")
     .option("relationship", "ADDED_TO")
     .option("relationship.save.strategy", "keys")
